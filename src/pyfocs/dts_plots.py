@@ -138,7 +138,7 @@ def bath_validation(ds, in_callib, bath_lims=None, plot_var='bias',
                             width_ratios=widths,
                             hspace=0.18, wspace=0.15,
                             )
-    divnorm = colors.DivergingNorm(vmin=np.min(bath_lims),
+    divnorm = colors.TwoSlopeNorm(vmin=np.min(bath_lims),
                                    vcenter=0,
                                    vmax=np.max(bath_lims))
 
