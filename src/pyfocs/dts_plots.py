@@ -196,7 +196,7 @@ def bath_validation(ds, in_callib, bath_lims=None, plot_var='bias',
         ax_map.get_shared_y_axes().join(ax_map, ax_LAF)
 
         # Annotation
-        ax_map.text(0.0, 0.8, bn, transform=ax_map.transAxes,
+        ax_map.text(0.02, 0.8, bn, transform=ax_map.transAxes,
                     bbox=dict(facecolor='white', alpha=0.5))
 
         # LAF-averaged, explicit over time
