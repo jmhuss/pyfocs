@@ -117,6 +117,23 @@ def config(fn_cfg, ignore_flags=False):
 
     # -------------------------------------------------------------------------
     # Integrity of caibration parameters
+    # - onlc check LAF arguments
+    if ignore_flags:
+        cal = cfg['calibration']
+        for cloc in cal['library']:
+            # Get details for this section
+            calsect = cal['library'][cloc]
+            # All locations are defined by a pair of LAFs.
+            assert 'LAF' in calsect, 'No LAFs provided for ' + cloc
+            assert len(calsect['LAF']) == 2, missing_mess.format(cl=cloc,
+                                                                 lib=calsect)
+            if any(np.isnan(calsect['LAF'])):
+                del cal['library'][cloc]
+                print(cloc + ' will not be labeled due to NaNs in LAF. Check library.')
+                continue
+        in_cfg['calibration'] = copy.deepcopy(cal)
+
+    # - comprehensive calibration check
     if in_cfg['flags']['calibrate_flag'] and not ignore_flags:
         probe_names = []
         cal = cfg['calibration']
