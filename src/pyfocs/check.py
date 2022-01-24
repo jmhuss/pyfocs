@@ -134,7 +134,7 @@ def config(fn_cfg, ignore_flags=False):
         in_cfg['calibration'] = copy.deepcopy(cal)
 
     # - comprehensive calibration check
-    if in_cfg['flags']['calibrate_flag'] and not ignore_flags:
+    elif in_cfg['flags']['calibrate_flag']:
         probe_names = []
         cal = cfg['calibration']
 
