@@ -138,7 +138,7 @@ def bath_validation(ds, in_callib, bath_lims=None, plot_var='bias',
                             width_ratios=widths,
                             hspace=0.18, wspace=0.15,
                             )
-    divnorm = colors.DivergingNorm(vmin=np.min(bath_lims),
+    divnorm = colors.TwoSlopeNorm(vmin=np.min(bath_lims),
                                    vcenter=0,
                                    vmax=np.max(bath_lims))
 
@@ -178,7 +178,7 @@ def bath_validation(ds, in_callib, bath_lims=None, plot_var='bias',
         ax_LAF.set_xlim(np.min(bath_lims), np.max(bath_lims))
         ax_LAF.set_ylabel('LAF (m)')
 
-        if ax_LAF.is_last_row():
+        if ax_LAF.get_subplotspec().is_last_row():
             ax_LAF.set_xlabel(label_text)
         else:
             ax_LAF.set_xticklabels([])
@@ -189,14 +189,14 @@ def bath_validation(ds, in_callib, bath_lims=None, plot_var='bias',
                                norm=divnorm)
         ax_map.set_yticklabels([])
 
-        if not ax_map.is_last_row():
+        if not ax_map.get_subplotspec().is_last_row():
             ax_map.set_xticklabels([])
-        if not ax_LAF.is_last_row():
+        if not ax_LAF.get_subplotspec().is_last_row():
             ax_LAF.set_xticklabels([])
         ax_map.get_shared_y_axes().join(ax_map, ax_LAF)
 
         # Annotation
-        ax_map.text(0.0, 0.8, bn, transform=ax_map.transAxes,
+        ax_map.text(0.02, 0.8, bn, transform=ax_map.transAxes,
                     bbox=dict(facecolor='white', alpha=0.5))
 
         # LAF-averaged, explicit over time
