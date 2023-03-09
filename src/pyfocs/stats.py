@@ -96,14 +96,15 @@ def norm_xcorr(x1, x2, lag=None, remove_mean=False, scaleopt='none'):
     return norm_xcorr
 
 
-def block_diff(da, indexer, window_size, step_size):
+def block_diff(da, indexer, window_size, step_size, log_z=False):
     '''
     Computes the finite difference derivative over an arbitrary window and dimension.
     Returns an xarray DataArray with the same coordinates as the original DataArray.
     '''
 
     # Rolling average
-    da_roll = da.rolling({indexer: window_size}, center=True, min_periods=window_size // 2).mean()
+    da_roll = da.rolling({indexer: window_size}, center=True,
+                         min_periods=window_size // 2).mean()
 
     # Dictionaries of our indexer for this window
     sel_var_dict1 = {indexer: slice(window_size, None)}
@@ -111,14 +112,21 @@ def block_diff(da, indexer, window_size, step_size):
     # And the dictionary of the window mid-point.
     sel_var_dict_mid = {indexer: slice(window_size // 2, -window_size // 2)}
 
-    # Block difference using the numpy arrays to avoid xarray trying to automatically align
-    # the two objects.
+    # Block difference using the numpy arrays to avoid xarray trying to automatically
+    # align the two objects.
     bdiff_np = da_roll.isel(sel_var_dict1).values - da_roll.isel(sel_var_dict2).values
 
     # Convert to physical units
-    bdiff_np = bdiff_np / (window_size * step_size)
+    if log_z:
+        bdiff_np_dlnz = (da_roll.lnz.isel(sel_var_dict1).values - da_roll.lnz.isel(
+            sel_var_dict2).values)
+        bdiff_np = bdiff_np / bdiff_np_dlnz
 
-    # Re-construct the xarray object. Here I make some assumptions just to make the example work.
+    elif not log_z:
+        bdiff_np = bdiff_np / (window_size * step_size)
+
+    # Re-construct the xarray object. Here I make some assumptions just to make the
+    # example work.
     dim_names = da.coords.dims
     indexer_midpoint = da.isel(sel_var_dict_mid)[indexer]
 
