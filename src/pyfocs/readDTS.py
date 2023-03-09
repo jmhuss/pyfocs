@@ -11,6 +11,7 @@ import numpy as np
 # Error classes
 class Error(Exception):
     """Base class for exceptions in this module."""
+
     pass
 
 
@@ -22,11 +23,11 @@ class CorruptedXMLError(Error):
 
 
 def xml_read(dumbXMLFile):
-    '''
+    """
     Opens the given xml file and reads the dts data contained within.
-    '''
+    """
     # The Ultimas/XT return incomplete files at times, which must be discarded.
-    if 'incomplete' in dumbXMLFile:
+    if "incomplete" in dumbXMLFile:
         raise CorruptedXMLError
     # Continue to try and read the file.
     try:
@@ -38,27 +39,26 @@ def xml_read(dumbXMLFile):
         # Raising this error allows us to catch corrupted files.
         raise CorruptedXMLError
     # Remove all of the bullshit
-    doc = doc['logs']['log']
+    doc = doc["logs"]["log"]
 
     # Extract units/metadata info out of xml dictionary
-    metaData = {'LAF_beg': float(doc['startIndex']['#text']),
-                'LAF_end': float(doc['endIndex']['#text']),
-                'dLAF': float(doc['stepIncrement']['#text']),
-                'dt_start': pd.to_datetime(doc['startDateTimeIndex'],
-                                           infer_datetime_format=True,
-                                           utc=True),
-                'dt_end': pd.to_datetime(doc['endDateTimeIndex'],
-                                         infer_datetime_format=True,
-                                         utc=True),
-                'probe1Temperature': float(doc['customData']
-                                           ['probe1Temperature']['#text']),
-                'probe2Temperature': float(doc['customData']
-                                           ['probe2Temperature']['#text']),
-                'fiberOK': int(doc['customData']['fibreStatusOk']),
-                }
+    metaData = {
+        "LAF_beg": float(doc["startIndex"]["#text"]),
+        "LAF_end": float(doc["endIndex"]["#text"]),
+        "dLAF": float(doc["stepIncrement"]["#text"]),
+        "dt_start": pd.to_datetime(
+            doc["startDateTimeIndex"], infer_datetime_format=True, utc=True
+        ),
+        "dt_end": pd.to_datetime(
+            doc["endDateTimeIndex"], infer_datetime_format=True, utc=True
+        ),
+        "probe1Temperature": float(doc["customData"]["probe1Temperature"]["#text"]),
+        "probe2Temperature": float(doc["customData"]["probe2Temperature"]["#text"]),
+        "fiberOK": int(doc["customData"]["fibreStatusOk"]),
+    }
 
     # Extract data
-    data = doc['logData']['data']
+    data = doc["logData"]["data"]
 
     numEntries = np.size(data)
     LAF = np.empty(numEntries)
@@ -67,45 +67,47 @@ def xml_read(dumbXMLFile):
     temp = np.empty_like(LAF)
 
     # Check dts type based on the number of columns
-    if len(data[0].split(',')) == 4:
-        dtsType = 'single_ended'
-    elif len(data[0].split(',')) == 6:
-        dtsType = 'double_ended'
+    if len(data[0].split(",")) == 4:
+        dtsType = "single_ended"
+    elif len(data[0].split(",")) == 6:
+        dtsType = "double_ended"
     else:
-        raise IOError('Unrecognized xml format... dumping first row \n'
-                      + data[0])
+        raise IOError("Unrecognized xml format... dumping first row \n" + data[0])
 
     # Single ended data
-    if 'single_ended' in dtsType:
+    if "single_ended" in dtsType:
         for dnum, dlist in enumerate(data):
-            LAF[dnum], Ps[dnum], Pas[dnum], temp[dnum] = list(map(float,
-                                                              dlist.split(','))
-                                                              )
-        actualData = pd.DataFrame.from_dict({'LAF': LAF,
-                                             'Ps': Ps,
-                                             'Pas': Pas,
-                                             'temp': temp}).set_index('LAF')
+            LAF[dnum], Ps[dnum], Pas[dnum], temp[dnum] = list(
+                map(float, dlist.split(","))
+            )
+        actualData = pd.DataFrame.from_dict(
+            {"LAF": LAF, "Ps": Ps, "Pas": Pas, "temp": temp}
+        ).set_index("LAF")
 
     # Double ended data
-    elif 'double_ended' in dtsType:
+    elif "double_ended" in dtsType:
         rPs = np.empty_like(LAF)
         rPas = np.empty_like(LAF)
 
         for dnum, dlist in enumerate(data):
-            LAF[dnum], Ps[dnum], Pas[dnum], rPs[dnum], rPas[dnum], temp[dnum], = list(map(float, dlist.split(',')))
+            (
+                LAF[dnum],
+                Ps[dnum],
+                Pas[dnum],
+                rPs[dnum],
+                rPas[dnum],
+                temp[dnum],
+            ) = list(map(float, dlist.split(",")))
 
-        actualData = pd.DataFrame.from_dict({'LAF': LAF,
-                                             'Ps': Ps,
-                                             'Pas': Pas,
-                                             'rPs': rPs,
-                                             'rPas': rPas,
-                                             'temp': temp}).set_index('LAF')
+        actualData = pd.DataFrame.from_dict(
+            {"LAF": LAF, "Ps": Ps, "Pas": Pas, "rPs": rPs, "rPas": rPas, "temp": temp}
+        ).set_index("LAF")
 
-    return(actualData, metaData)
+    return (actualData, metaData)
 
 
-def archive_read(cfg, write_mode='preserve', prevNumChunk=0):
-    '''
+def archive_read(cfg, write_mode="preserve", prevNumChunk=0):
+    """
     Reads all archived xml files in the provided directory
     and turns them into netcdfs.
 
@@ -119,12 +121,12 @@ def archive_read(cfg, write_mode='preserve', prevNumChunk=0):
     prevNumChunk  -  The chunk number to assign the output netcdf name. When
                      running across multiple experiments/directories it can be
                      useful to specify your own value.
-    '''
+    """
 
     # Assign values
-    dirDataOriginal = cfg['directories']['dirArchive']
-    dirProcessed = cfg['directories']['dirRawNetcdf']
-    channelNames = cfg['directories']['channelName']
+    dirDataOriginal = cfg["directories"]["dirArchive"]
+    dirProcessed = cfg["directories"]["dirRawNetcdf"]
+    channelNames = cfg["directories"]["channelName"]
 
     # If corrupt files are found we need to keep track of them (and skip them).
     corrupt_file_count = 0
@@ -135,12 +137,11 @@ def archive_read(cfg, write_mode='preserve', prevNumChunk=0):
         # Check directories
         dirData = dirDataOriginal
         if not os.path.isdir(dirData):
-            raise IOError('Data directory was not found at ' + dirData)
+            raise IOError("Data directory was not found at " + dirData)
         os.chdir(dirData)
 
         # List of files to iterate over
-        dirConTar = [dC for dC in os.listdir() if chan in dC
-                     and '.tar.gz' in dC]
+        dirConTar = [dC for dC in os.listdir() if chan in dC and ".tar.gz" in dC]
         dirConTar.sort()
 
         # Untar files
@@ -148,13 +149,13 @@ def archive_read(cfg, write_mode='preserve', prevNumChunk=0):
             print(tFile)
 
             # Name of the resulting netcdf
-            nc_out_name = 'raw_' + tFile.split('.')[0] + '.nc'
+            nc_out_name = "raw_" + tFile.split(".")[0] + ".nc"
 
             # Skip this archive if the netCDF already exists and we are
             # not overwriting.
-            if write_mode == 'preserve':
+            if write_mode == "preserve":
                 if os.path.isfile(os.path.join(dirProcessed, nc_out_name)):
-                    print('... exists. No overwriting.')
+                    print("... exists. No overwriting.")
                     continue
 
             # Extract the archive
@@ -163,8 +164,7 @@ def archive_read(cfg, write_mode='preserve', prevNumChunk=0):
             t.close
 
             # List of files to iterate over
-            dirConXML = [dC for dC in os.listdir() if chan in dC
-                         and '.xml' in dC]
+            dirConXML = [dC for dC in os.listdir() if chan in dC and ".xml" in dC]
             dirConXML.sort()
             nTotal = np.size(dirConXML)
             ds = None
@@ -174,10 +174,13 @@ def archive_read(cfg, write_mode='preserve', prevNumChunk=0):
             # along the time dimension, and output data with a given chunk size
             # to netcdf format.
             for nDumb, someDumbFiles in enumerate(dirConXML):
-                if '.xml' not in someDumbFiles:
+                if ".xml" not in someDumbFiles:
                     continue
-                print("\r", someDumbFiles + ' File ' + str(nDumb + 1) + ' of '
-                      + str(nTotal), end="")
+                print(
+                    "\r",
+                    someDumbFiles + " File " + str(nDumb + 1) + " of " + str(nTotal),
+                    end="",
+                )
 
                 # Read the file
                 try:
@@ -189,12 +192,12 @@ def archive_read(cfg, write_mode='preserve', prevNumChunk=0):
 
                 # Create a temporary xarray Dataset
                 temp_Dataset = xr.Dataset.from_dataframe(df)
-                temp_Dataset.coords['time'] = meta['dt_start']
+                temp_Dataset.coords["time"] = meta["dt_start"]
 
                 # Assing the reference probes to the dataset. This is no
                 # longer an option.
-                temp_Dataset['probe1Temperature'] = meta['probe1Temperature']
-                temp_Dataset['probe2Temperature'] = meta['probe2Temperature']
+                temp_Dataset["probe1Temperature"] = meta["probe1Temperature"]
+                temp_Dataset["probe2Temperature"] = meta["probe2Temperature"]
 
                 # If the flag is 'external' than no probe temperature field is
                 # returned as the external data stream must be handled
@@ -202,18 +205,20 @@ def archive_read(cfg, write_mode='preserve', prevNumChunk=0):
 
                 # Create a list of xarray Datasets
                 ds_list.append(temp_Dataset)
-            print('\n Concatenating netcdfs within archive...')
+            print("\n Concatenating netcdfs within archive...")
             try:
-                ds = xr.concat(ds_list, dim='time')
+                ds = xr.concat(ds_list, dim="time")
             except ValueError:
-                raise ValueError('No xml files were found within: ' + tFile)
+                raise ValueError("No xml files were found within: " + tFile)
 
             # Create a raw netcdf file for each archive interval. This means
             # that the archive interval dicates the speed/efficiency of the
             # later calibration step.
-            ds.attrs = {'LAF_beg': meta['LAF_beg'],
-                        'LAF_end': meta['LAF_end'],
-                        'dLAF': meta['dLAF']}
+            ds.attrs = {
+                "LAF_beg": meta["LAF_beg"],
+                "LAF_end": meta["LAF_end"],
+                "dLAF": meta["dLAF"],
+            }
 
             # Delete this block once the new calibration routine is working.
             # # Label the Ultima PT100 data. These names are used in
@@ -230,24 +235,23 @@ def archive_read(cfg, write_mode='preserve', prevNumChunk=0):
             # except KeyError:
             #     print('No PT100 field names were passed.')
 
-
             # Save to netcdf
             os.chdir(dirProcessed)
-            ds.to_netcdf(nc_out_name, 'w')
+            ds.to_netcdf(nc_out_name, "w")
 
             # Close the netcdf and release the memory.
             ds.close()
             ds = None
 
             os.chdir(dirData)
-            print('')
+            print("")
             # Remove the extracted xml files. The second wildcard character
             # catches the 'incomplete' xml files that occur with power outages.
-            files_to_remove = glob.glob('*.xml*')
+            files_to_remove = glob.glob("*.xml*")
             for file in files_to_remove:
                 os.remove(file)
 
     # Notify the user if corrupt data are found.
     if corrupt_file_count > 0:
-        print('Corrupt files: ' + str(corrupt_file_count))
-        print(*corrupt_file_list, sep='\n')
+        print("Corrupt files: " + str(corrupt_file_count))
+        print(*corrupt_file_list, sep="\n")

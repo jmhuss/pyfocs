@@ -86,9 +86,9 @@ def potential_temperature(T, p_0, p):
 
 
 def height_interp(section, z_bottom, num_layers=None, flip=False):
-    '''
+    """
     Determine the linear height to interpolate along for each time step.
-    '''
+    """
     # Number of points within each profile, this does not change with time.
     if num_layers:
         n_laf = num_layers
@@ -98,20 +98,20 @@ def height_interp(section, z_bottom, num_layers=None, flip=False):
     # Create the z coordinates for this time step using similar
     # assumptions as above, but for just this time step.
     if not flip:
-        z_temp = np.linspace(z_bottom, section['top'], num=n_laf)
+        z_temp = np.linspace(z_bottom, section["top"], num=n_laf)
     else:
-        z_temp = np.linspace(section['top'], z_bottom, num=n_laf)
+        z_temp = np.linspace(section["top"], z_bottom, num=n_laf)
     # Interpolate the profile to the average height spacing found above.
-    section.coords['z'] = ('z', z_temp)
+    section.coords["z"] = ("z", z_temp)
 
     return section
 
 
 def height_interp_time(section, z_bottom):
-    '''
+    """
     Create a uniform height coordinate through time for a tethered balloon
     with a time varying height.
-    '''
+    """
     # Find just the section to be labeled.
     LAF = section.LAF.values
 
@@ -129,11 +129,11 @@ def height_interp_time(section, z_bottom):
 
     # The average height of the profile. This is used for creating the
     # height step for the linear interpolation.
-    z_top_avg = section['top'].mean(dim='time').values
+    z_top_avg = section["top"].mean(dim="time").values
 
     # The maximum height of the layer. This sets the top value that the
     # profile is interpolated to.
-    z_top_max = section['top'].max(dim='time').values
+    z_top_max = section["top"].max(dim="time").values
 
     # The average height step for the profile.
     delta_z_avg = (z_top_avg - z_bottom) / n_laf
@@ -148,8 +148,13 @@ def height_interp_time(section, z_bottom):
     # points. This is effectively downsampling.
     ds_to_label = []
     for n, t in enumerate(section.time):
-        sys.stdout.write('\r' + 'Time step ' + str(n + 1) + ' of '
-                         + str(np.size(section.time.values)))
+        sys.stdout.write(
+            "\r"
+            + "Time step "
+            + str(n + 1)
+            + " of "
+            + str(np.size(section.time.values))
+        )
 
         # Select this time step.
         temp = section.sel(time=t)
@@ -157,16 +162,16 @@ def height_interp_time(section, z_bottom):
         # Create the z coordinates for this time step using similar
         # assumptions as above, but for just this time step.
         if not flip:
-            z_temp = np.linspace(z_bottom, temp['top'], num=n_laf)
+            z_temp = np.linspace(z_bottom, temp["top"], num=n_laf)
         else:
-            z_temp = np.linspace(temp['top'], z_bottom, num=n_laf)
+            z_temp = np.linspace(temp["top"], z_bottom, num=n_laf)
         # Interpolate the profile to the average height spacing found above.
-        temp.coords['z'] = ('LAF', z_temp)
-        temp = temp.swap_dims({'LAF': 'z'}).interp(z=z_int)
+        temp.coords["z"] = ("LAF", z_temp)
+        temp = temp.swap_dims({"LAF": "z"}).interp(z=z_int)
 
         # Append this time step to the container for the section
         ds_to_label.append(temp)
 
     # Concatenate along the time dimension
-    out = xr.concat(ds_to_label, 'time')
+    out = xr.concat(ds_to_label, "time")
     return out

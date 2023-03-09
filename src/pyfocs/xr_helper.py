@@ -2,21 +2,24 @@ import numpy as np
 
 
 def swap_sel(ds, coord1, coord2, selection):
-    '''
+    """
     Selects data using a non-dimension coordinate and then returns an xarray
     Dataset with the original dimensions.
-    '''
+    """
     try:
-        ret_ds = ds.swap_dims({coord1: coord2}).loc[{coord2: selection}].\
-            swap_dims({coord2: coord1})
+        ret_ds = (
+            ds.swap_dims({coord1: coord2})
+            .loc[{coord2: selection}]
+            .swap_dims({coord2: coord1})
+        )
     except ValueError:
         ret_ds = ds.swap_dims({coord1: coord2}).loc[{coord2: selection}]
 
-    return(ret_ds)
+    return ret_ds
 
 
 def xr_unique_index(ds, dim):
-    '''
+    """
     It is not uncommon for DTS data to have shared xyz labels, e.g. at vertices
     between line segments, creating non-unique indices. This problem makes it
     impossible to use many xarray functions that rely on unique indices. It
@@ -32,8 +35,7 @@ def xr_unique_index(ds, dim):
     Returns
     ----------
         ds : xarray with non-unique labels along 'dim' dropped
-    '''
-
+    """
 
     _, index = np.unique(ds[dim], return_index=True)
     ds = ds.isel({dim: index})
