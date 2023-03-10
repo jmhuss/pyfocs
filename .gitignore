@@ -10,7 +10,7 @@ dist/
 .idea/
 
 # Ignore the test data.
-tests/data/multifiledemo/
+tests/data/multifiledemo/*
 
 # due to using tox and pytest
 .tox
