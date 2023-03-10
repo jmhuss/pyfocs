@@ -310,7 +310,7 @@ def assign_ref_data(dstemp, cal, ref_data=None):
         # If the bath pt100s and dts do not line up in time,
         # notify the user.
         if not (np.size(np.flatnonzero(~np.isnan(dstemp.temp.values))) > 0):
-            print("PT100 and DTS data do not line up in time for " + raw_nc)
+            print("External and DTS data do not line up in time. NaNs will be present.")
 
     # Rename built in probes if they are used.
     if cal["builtin_flag"]:

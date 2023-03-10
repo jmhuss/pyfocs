@@ -56,6 +56,6 @@ def test_pyfoc_LOVE19_examples():
             sh.python(["PyFOX.py", os.path.join(path_data, "temp.yml")])
         except sh.ErrorReturnCode as e:
             # print(e)
-            pytest.fail(ex_name + " had a problem: {}".format(e))
+            pytest.fail(ex_name + " had a problem: {}".format(e.stderr))
         finally:
             os.remove(os.path.join(path_data, "temp.yml"))

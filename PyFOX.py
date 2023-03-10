@@ -1,26 +1,20 @@
 #!/usr/bin/env python
 import numpy as np
-from datetime import timedelta
 import pandas as pd
 import xarray as xr
+import warnings
 
 # OS interaction
 import os
-import yaml
-import tkinter as tk  # For the dialog that lets you choose your config file
+import tkinter as tk
 from tkinter import filedialog
 import copy
-import csv
 import sys
 
-# import matplotlib.pyplot as plt
-
-# UBT's package for handling dts data
 import pyfocs
 
-# Ignore the future compatibility warnings
-import warnings
 
+# Ignore the future compatibility warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=RuntimeWarning)
 
