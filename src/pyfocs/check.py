@@ -13,7 +13,21 @@ def config(fn_cfg, ignore_flags=False):
     expected by pyfocs.
     """
 
-    # @ refactor the code to have separate location library, calibration,
+    # Error messages
+    miss_ref_sen_mess = (
+        "The reference sensor, {r}, for {cl} was "
+        "not in the list of provided sensors: "
+        "{slist}"
+    )
+    unkn_cal_mess = (
+        "The calibration type, {ct}, for {cl} is not "
+        "recognized. Valid options are {valopt}"
+    )
+    missing_mess = (
+        "LAF for {cl} was not defined by pair of LAF, " "Found intsead: {lib}"
+    )
+
+    # @ToDo: refactor the code to have separate location library, calibration,
     # flags, etc checks. Should enable the ignore_flags option to be useful
     # again in the future.
 
@@ -122,8 +136,8 @@ def config(fn_cfg, ignore_flags=False):
     in_cfg["resampling_time"] = dt
 
     # -------------------------------------------------------------------------
-    # Integrity of caibration parameters
-    # - onlc check LAF arguments
+    # Integrity of calibration parameters
+    # - only check LAF arguments
     if ignore_flags:
         cal = cfg["calibration"]
         for cloc in cal["library"]:
@@ -270,20 +284,6 @@ def config(fn_cfg, ignore_flags=False):
                 raise ValueError(mess.format(cref=cal_baths))
 
         # Check integrity of each calibration section
-        # Error messages
-        miss_ref_sen_mess = (
-            "The reference sensor, {r}, for {cl} was "
-            "not in the list of provided sensors: "
-            "{slist}"
-        )
-        unkn_cal_mess = (
-            "The calibration type, {ct}, for {cl} is not "
-            "recognized. Valid options are {valopt}"
-        )
-        missing_mess = (
-            "LAF for {cl} was not defined by pair of LAF, " "Found intsead: {lib}"
-        )
-
         for cloc in cal["library"]:
             # Get details for this section
             calsect = cal["library"][cloc]

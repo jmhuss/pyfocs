@@ -11,7 +11,7 @@ import xarray as xr
 
 def to_datastore(ds, config, double):
     """
-    Convert the pyfocs version of an xarray dataset into a dtscalibration
+    Convert the pyfocs version of a xarray dataset into a dtscalibration
     datastore object.
     """
 
@@ -27,9 +27,9 @@ def to_datastore(ds, config, double):
 
     # Convert to a DataStore object to take advantage of the dtscalibration methods
     dstore = dtscalibration.DataStore(ds)
-    # Rename 'x' to 'LAF'
+    # Rename 'x' to 'LAF'.
     dstore = dstore.rename({"LAF": "x"})
-    # DataStore requires dimensions of 'x, time'
+    # DataStore requires dimensions of 'x, time'.
     for dvar in dstore.data_vars:
         try:
             dtscalibration.datastore_utils.check_dims(
@@ -40,15 +40,15 @@ def to_datastore(ds, config, double):
         if dvar in varnames_conversion:
             dstore = dstore.rename({dvar: varnames_conversion[dvar]})
 
-    # Impose a fake acquisition time here
+    # Impose a fake acquisition time here.
     timeval = 1
     timeunit = "s"
     dt_np = np.timedelta64(timeval, timeunit)
     dstore["userAcquisitionTimeFW"] = (("time"), np.ones(len(dstore["time"])) * dt_np)
 
-    # Build the reference sections
+    # Build the reference sections.
 
-    # Location library of reference sections
+    # Location library of reference sections.
     cal_lib = config["calibration"]["library"]
 
     # Probe names
@@ -70,7 +70,7 @@ def to_datastore(ds, config, double):
         LAF1 = np.min(cal_lib[cl]["LAF"])
         LAF2 = np.max(cal_lib[cl]["LAF"])
 
-        # This section is poorly formatted
+        # This section is poorly formatted.
         if np.isnan(LAF1) or np.isnan(LAF2):
             continue
         # This section does not exist in the data.
@@ -114,34 +114,28 @@ def from_datastore(dstore, datavars=None, coords=None, return_cal_params=False):
             "cal_temp": "tmpf",
         }
 
-    # For later once I understand how the params are labeled.
-    #     if double and return_cal_params:
-    #         varnames_conversion.append()
-    #     elif not double and return_cal_params:
-    #         varnames_conversion.append()
-
-    # Convert 'x' to 'LAF' for naming consistency
+    # Convert 'x' to 'LAF' for naming consistency.
     dstore = dstore.rename({"x": "LAF"})
 
     # Create the xr Dataset that will be returned.
     ds_cal = xr.Dataset(
-        {"cal_temp": (("time", "LAF"), dstore[varn_conv["cal_temp"]].T)},
+        {"cal_temp": (("time", "LAF"), dstore[varn_conv["cal_temp"]].data.T)},
         coords={
             "time": dstore.time,
             "LAF": dstore.LAF,
         },
     )
 
-    # Pass out the ammended attributes
+    # Pass out the amended attributes.
     del dstore.attrs["_sections"]
     ds_cal.attrs = dstore.attrs
 
-    # Pass out all datavars (typically these are the reference probes)
+    # Pass out all datavars (typically these are the reference probes).
     if datavars:
         for dvar in datavars:
             ds_cal[dvar] = dstore[dvar]
 
-    # Keep the specified coordinates
+    # Keep the specified coordinates.
     if coords:
         for c in coords:
             ds_cal.coords[c] = dstore.coords[c]
@@ -316,7 +310,7 @@ def assign_ref_data(dstemp, cal, ref_data=None):
         # If the bath pt100s and dts do not line up in time,
         # notify the user.
         if not (np.size(np.flatnonzero(~np.isnan(dstemp.temp.values))) > 0):
-            print("PT100 and DTS data do not line up in time for " + raw_nc)
+            print("External and DTS data do not line up in time. NaNs will be present.")
 
     # Rename built in probes if they are used.
     if cal["builtin_flag"]:

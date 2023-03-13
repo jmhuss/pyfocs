@@ -69,14 +69,14 @@ def section_shift_x(
 
     # Assign a relative 'x' index.
     if s1_reverse:
-        s1.coords["x"] = (("LAF"), s1.LAF.max() - s1.LAF)
+        s1.coords["x"] = ("LAF", s1.LAF.max().values - s1.LAF.values)
     elif not s1_reverse:
-        s1.coords["x"] = (("LAF"), s1.LAF - s1.LAF.min())
+        s1.coords["x"] = ("LAF", s1.LAF.values - s1.LAF.min().values)
 
     if s2_reverse:
-        s2.coords["x"] = (("LAF"), s2.LAF.max() - s2.LAF)
+        s2.coords["x"] = ("LAF", s2.LAF.max().values - s2.LAF.values)
     elif not s2_reverse:
-        s2.coords["x"] = (("LAF"), s2.LAF - s2.LAF.min())
+        s2.coords["x"] = ("LAF", s2.LAF.values - s2.LAF.min().values)
 
     # Force the two sections to be the same length in LAF
     if len(s1.LAF.values) > len(s2.LAF.values):
@@ -84,8 +84,8 @@ def section_shift_x(
     if len(s1.LAF.values) < len(s2.LAF.values):
         s2 = s2.isel(LAF=slice(0, len(s1.LAF.values)))
 
-    # No fixed_shift was provided so we will determine the optimal shift
-    # using the cross-correlation.
+    # No fixed_shift was provided. Instead, determine the optimal shift using the
+    # cross-correlation.
     if fixed_shift is None:
         # Interpolate to a fine 'x' scale to allow non-integer dLAF adjustments
         if restep:
@@ -98,12 +98,14 @@ def section_shift_x(
             s2_vals = s2.swap_dims({"LAF": "x"})
             s2_vals = s2_vals.interp(x=x_new, method="linear")
 
-            # Use the time mean to remove the effect of instrument noise on the lag analysis.
+            # Use the time mean to remove the effect of instrument noise on the lag
+            # analysis.
             s1_vals = s1_vals[temp_field].mean(dim="time").values
             s2_vals = s2_vals[temp_field].mean(dim="time").values
 
         else:
-            # Use the time mean to remove the effect of instrument noise on the lag analysis.
+            # Use the time mean to remove the effect of instrument noise on the lag
+            # analysis.
             s1_vals = s1[temp_field].mean(dim="time").values
             s2_vals = s2[temp_field].mean(dim="time").values
             restep = 1
