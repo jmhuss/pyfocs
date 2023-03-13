@@ -551,10 +551,10 @@ def bath_check(
             ylims = bath[probename].mean(dim="time").values
             ylims = ylims + np.array(bath_lims["temp"])
             ax.set_ylim(ylims)
-            if ax.is_first_col():
+            if ax.get_subplotspec().is_first_col():
                 ax.legend()
                 ax.set_ylabel("Temperature (C)")
-            if ax.is_first_row():
+            if ax.get_subplotspec().is_first_row():
                 ax.set_title(bname)
 
         # Power anomaly
@@ -586,11 +586,11 @@ def bath_check(
 
         ax.set_xlim(bath_start - laf_lims, bath_end + laf_lims)
         ax.set_ylim(bath_lims["power_anom"])
-        if ax.is_first_col():
+        if ax.get_subplotspec().is_first_col():
             ax.set_ylabel(r"$log(\frac{Ps}{Pas}) - \overline{log(\frac{Ps}{Pas})}$")
         ax.xaxis.set_major_locator(MultipleLocator(1))
         ax.xaxis.set_major_formatter(FormatStrFormatter("%d"))
-        if ax.is_first_row():
+        if ax.get_subplotspec().is_first_row():
             ax.set_title(bname)
 
         # Standard deviation of power
@@ -604,7 +604,7 @@ def bath_check(
 
         ax.set_xlim(bath_start - laf_lims, bath_end + laf_lims)
         ax.set_ylim(bath_lims["power_std"])
-        if ax.is_first_col():
+        if ax.get_subplotspec().is_first_col():
             ax.set_ylabel(r"$\sigma_{time}(log(\frac{Ps}{Pas}))$")
         ax.xaxis.set_major_locator(MultipleLocator(1))
         ax.xaxis.set_major_formatter(FormatStrFormatter("%d"))
@@ -629,7 +629,7 @@ def bath_check(
 
         ax.set_xlim(bath_start - laf_lims, bath_end + laf_lims)
         ax.set_ylim(bath_lims["power_deriv"])
-        if ax.is_first_col():
+        if ax.get_subplotspec().is_first_col():
             ax.set_ylabel(r"$\frac{dlog(\frac{Ps}{Pas})}{dLAF}$")
         ax.set_xlabel("LAF (m)")
         ax.xaxis.set_major_locator(MultipleLocator(1))
