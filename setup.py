@@ -78,6 +78,7 @@ setup(
             "bump2version",
             "pytest",
             "tox",
+            "sh",
         ]
     },
     # Can call the PyFOX script from the command line
