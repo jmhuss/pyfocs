@@ -119,6 +119,11 @@ def bath_validation(
         except KeyError:
             del callib[bn]
 
+    if not callib:
+        raise KeyError(
+            "None of the specified reference sections could be found in the dataset."
+        )
+
     if plot_var == "bias":
         label_text = "Bias (K)"
         if not bath_lims:

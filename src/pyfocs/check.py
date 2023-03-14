@@ -486,7 +486,7 @@ def config(fn_cfg, ignore_flags=False):
             if cfg["dataProperties"]["phys_locs_labeling"] == "stacked":
                 stacked = True
             else:
-                stacked = True
+                stacked = False
         else:
             stacked = False
 
