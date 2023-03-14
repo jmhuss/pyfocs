@@ -38,9 +38,83 @@ def xml_read(dumbXMLFile):
         # general catch here and hope for the best.
         # Raising this error allows us to catch corrupted files.
         raise CorruptedXMLError
-    # Remove all of the bullshit
-    doc = doc["logs"]["log"]
+    # Strip the unneeded metadata and accommodate the various versions.
 
+    if "logs" in doc:
+        doc = doc["logs"]["log"]
+        return read_new_silixa_xml(doc)
+    # The xml file is older.
+    elif "wellLogs" in doc:
+        doc = doc["wellLogs"]["wellLog"]
+        return read_old_silixa_xml(doc)
+
+
+def read_old_silixa_xml(doc):
+    # Extract units/metadata info out of xml dictionary
+    metaData = {
+        "LAF_beg": float(doc["minIndex"]["#text"]),
+        "LAF_end": float(doc["maxIndex"]["#text"]),
+        "dLAF": float(doc["blockInfo"]["stepIncrement"]["#text"]),
+        "dt_start": pd.to_datetime(
+            doc["minDateTimeIndex"], infer_datetime_format=True, utc=True
+        ),
+        "dt_end": pd.to_datetime(
+            doc["maxDateTimeIndex"], infer_datetime_format=True, utc=True
+        ),
+        "probe1Temperature": float(doc["customData"]["probe1Temperature"]),
+        "probe2Temperature": float(doc["customData"]["probe2Temperature"]),
+    }
+
+    # Extract data
+    data = doc["logData"]["data"]
+
+    numEntries = np.size(data)
+    LAF = np.empty(numEntries)
+    Ps = np.empty_like(LAF)
+    Pas = np.empty_like(LAF)
+    temp = np.empty_like(LAF)
+
+    # Check dts type based on the number of columns
+    if len(data[0]["#text"].split(",")) == 4:
+        dtsType = "single_ended"
+    elif len(data[0]["#text"].split(",")) == 6:
+        dtsType = "double_ended"
+    else:
+        raise IOError("Unrecognized xml format... dumping first row \n" + data[0])
+
+    # Single ended data
+    if "single_ended" in dtsType:
+        for dnum, dlist in enumerate(data):
+            LAF[dnum], Ps[dnum], Pas[dnum], temp[dnum] = list(
+                map(float, dlist["#text"].split(","))
+            )
+        actualData = pd.DataFrame.from_dict(
+            {"LAF": LAF, "Ps": Ps, "Pas": Pas, "temp": temp}
+        ).set_index("LAF")
+
+    # Double ended data
+    elif "double_ended" in dtsType:
+        rPs = np.empty_like(LAF)
+        rPas = np.empty_like(LAF)
+
+        for dnum, dlist in enumerate(data):
+            (
+                LAF[dnum],
+                Ps[dnum],
+                Pas[dnum],
+                rPs[dnum],
+                rPas[dnum],
+                temp[dnum],
+            ) = list(map(float, dlist.split(",")))
+
+        actualData = pd.DataFrame.from_dict(
+            {"LAF": LAF, "Ps": Ps, "Pas": Pas, "rPs": rPs, "rPas": rPas, "temp": temp}
+        ).set_index("LAF")
+
+    return (actualData, metaData)
+
+
+def read_new_silixa_xml(doc):
     # Extract units/metadata info out of xml dictionary
     metaData = {
         "LAF_beg": float(doc["startIndex"]["#text"]),
@@ -143,6 +217,8 @@ def archive_read(cfg, write_mode="preserve", prevNumChunk=0):
         # List of files to iterate over
         dirConTar = [dC for dC in os.listdir() if chan in dC and ".tar.gz" in dC]
         dirConTar.sort()
+        if not dirConTar:
+            print("No archives were found for {}.".format(chan))
 
         # Untar files
         for tFile in dirConTar:
@@ -161,13 +237,17 @@ def archive_read(cfg, write_mode="preserve", prevNumChunk=0):
             # Extract the archive
             t = tarfile.open(tFile)
             t.extractall()
-            t.close
+            t.close()
 
             # List of files to iterate over
             dirConXML = [dC for dC in os.listdir() if chan in dC and ".xml" in dC]
+            # No .xml files could be found so an error needs to be raised.
+            if not dirConXML:
+                raise ValueError("No xml files found in {}".format(tFile))
+
+            # Sorting by name sould be the equivalent to sorting by date.
             dirConXML.sort()
             nTotal = np.size(dirConXML)
-            ds = None
             ds_list = []
 
             # Read each xml file, assign to an xarray Dataset, concatenate

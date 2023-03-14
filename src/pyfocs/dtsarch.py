@@ -263,7 +263,7 @@ def archiver(cfg):
                     break
 
                 # If the archiving mode is active, do not process
-                # the last archiving interval, as it may be incomplete. Instead
+                # the last archiving interval, as it may be incomplete. Instead,
                 # exit and handle this interval with the next scheduled call
                 # to the archiver. This step just requires no action here.
                 if mode == "active":

@@ -153,7 +153,7 @@ def double_end_dv_clean(ds):
 
 
 def merge_single(
-    dstore_fw, dstore_bw, shift_window=20, fixed_shift=None, plot_result=False
+    dstore_fw, dstore_bw, shift_window=500, fixed_shift=None, plot_result=False
 ):
     """
     Merge two single-ended channels to a single double-ended configuration.
@@ -172,11 +172,15 @@ def merge_single(
     if not fixed_shift:
         shift_lims = np.arange(-shift_window, shift_window, 1, dtype=int)
 
-        # Estimate the number of indices to shift the two channels to align them.
-        # I use some overly generous limits for searching
-        # This parameter should be made an optional argument passed to the function.
+        # Estimate the number of indices to shift the two channels to align them. The
+        # time mean is used, but dtscalibration relies on having a matrix of a
+        # particular dimensionality. Accommodate this by expanding back out the time
+        # dimension after averaging.
         shift1, shift2 = suggest_cable_shift_double_ended(
-            double.mean(dim="time").compute(),
+            double[["st", "ast", "rst", "rast"]]
+            .mean(dim="time")
+            .compute()
+            .expand_dims("time", axis=1),
             shift_lims,
             plot_result=plot_result,
         )
