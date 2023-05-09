@@ -32,8 +32,6 @@ Each Subdirectory corresponds to a particular step in the processing.
 
 # Installation
 
-This installation assumes you have the anaconda distribution of python. If you do not have anaconda see the basic [troubleshooting section](#Troubleshooting).
-
 pyfocs can be installed by using:
 
 `pip install pyfocs`
@@ -60,4 +58,4 @@ des Tombe, B.; Schilperoort, B.; Bakker, M. Estimation of Temperature and Associ
 
 ### Muppet Archiver
 
-Batch script for scheduled archiving of `.xml` files on the Silixa DTS devices. Why muppet? Unviersity of Bayreuth Micrometeorology names their Silixa devices after muppet characters. Requires an anaconda 3.* distribution of python. Task scheduler must point to the `.bat` script and not the python script.
+Batch script for scheduled archiving of `.xml` files on the Silixa DTS devices.
