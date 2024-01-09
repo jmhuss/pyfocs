@@ -1,6 +1,6 @@
 # coding=utf-8
 import dtscalibration
-from dtscalibration.datastore_utils import (
+from dtscalibration.dts_accessor_utils import (
     suggest_cable_shift_double_ended,
     shift_double_ended,
     merge_double_ended,
@@ -32,7 +32,7 @@ def to_datastore(ds, config, double):
     # DataStore requires dimensions of 'x, time'.
     for dvar in dstore.data_vars:
         try:
-            dtscalibration.datastore_utils.check_dims(
+            dtscalibration.dts_accessor_utils.check_dims(
                 dstore, [dvar], correct_dims=("x", "time")
             )
         except AssertionError as e:
